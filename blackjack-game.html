@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Multijoueur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a5f3a 0%, #0d3d26 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-screen {
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-screen input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 10px;
+            border: none;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .login-screen button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .lobby {
+            display: none;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .room-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .room-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd700;
+            transform: translateY(-5px);
+        }
+
+        .room-card h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .room-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .game-room {
+            display: none;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .room-code {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            color: #ffd700;
+        }
+
+        .chips-display {
+            font-size: 20px;
+            color: #ffd700;
+        }
+
+        .game-area {
+            display: grid;
+            gap: 20px;
+        }
+
+        .dealer-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 150px;
+        }
+
+        .players-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .player-hand {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .player-hand.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .player-hand.current-player {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .hand-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        .player-name.you {
+            color: #ffd700;
+        }
+
+        .hand-score {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .cards {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .card {
+            width: 60px;
+            height: 85px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: dealCard 0.3s ease-out;
+        }
+
+        @keyframes dealCard {
+            from {
+                transform: translateY(-30px) rotateY(90deg);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) rotateY(0);
+                opacity: 1;
+            }
+        }
+
+        .card.red {
+            color: #e74c3c;
+        }
+
+        .card.black {
+            color: #2c3e50;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            font-size: 30px;
+        }
+
+        .player-status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-waiting { background: rgba(52, 152, 219, 0.3); color: #3498db; }
+        .status-ready { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+        .status-playing { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+        .status-stand { background: rgba(241, 196, 15, 0.3); color: #f1c40f; }
+        .status-bust { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+        .status-win { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+        .status-lose { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+        .status-push { background: rgba(241, 196, 15, 0.3); color: #f1c40f; }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bet-section {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .bet-section input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            width: 120px;
+            text-align: center;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white; }
+
+        .quick-bet {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-bet button {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .chat-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .chat-messages {
+            margin-bottom: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin: 5px 0;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .chat-message .sender {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+        }
+
+        .message.info { color: #3498db; }
+        .message.success { color: #2ecc71; }
+        .message.warning { color: #f39c12; }
+        .message.error { color: #e74c3c; }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .card { width: 50px; height: 70px; font-size: 16px; }
+            button { padding: 10px 15px; font-size: 14px; }
+            .players-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 BLACKJACK MULTIJOUEUR 🎰</h1>
+
+        <div id="login-screen" class="login-screen">
+            <h2>👤 Bienvenue</h2>
+            <input type="text" id="player-name-input" placeholder="Entrez votre pseudo" maxlength="20">
+            <button class="btn-primary" onclick="setPlayerName()">Continuer</button>
+        </div>
+
+        <div id="lobby" class="lobby">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>🎮 Salles de jeu</h2>
+                <div class="chips-display">💰 Jetons: <span id="lobby-chips">1000</span></div>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn-primary" onclick="createRoom()">➕ Créer une salle</button>
+                <button class="btn-secondary" onclick="refreshRooms()">🔄 Actualiser</button>
+            </div>
+
+            <div id="rooms-container" class="rooms-grid"></div>
+            
+            <div class="message info">Cliquez sur une salle pour rejoindre ou créez-en une nouvelle</div>
+        </div>
+
+        <div id="game-room" class="game-room">
+            <div class="game-header">
+                <div class="room-code">Code: <span id="current-room-code"></span></div>
+                <div class="chips-display">💰 Jetons: <span id="game-chips">1000</span></div>
+                <button class="btn-danger" onclick="leaveRoom()">🚪 Quitter</button>
+            </div>
+
+            <div class="message" id="game-message"></div>
+
+            <div class="game-area">
+                <div class="dealer-section">
+                    <div class="hand-title">
+                        <span>🎩 Croupier</span>
+                        <span class="hand-score" id="dealer-score"></span>
+                    </div>
+                    <div class="cards" id="dealer-cards"></div>
+                </div>
+
+                <div class="players-section" id="players-container"></div>
+            </div>
+
+            <div class="controls">
+                <div class="bet-section" id="bet-section" style="display: none;">
+                    <label>Mise:</label>
+                    <input type="number" id="bet-input" min="10" value="50" step="10">
+                    <button class="btn-primary" onclick="placeBet()">Miser</button>
+                </div>
+
+                <div class="quick-bet" id="quick-bet" style="display: none;">
+                    <button class="btn-warning" onclick="setBet(10)">10</button>
+                    <button class="btn-warning" onclick="setBet(25)">25</button>
+                    <button class="btn-warning" onclick="setBet(50)">50</button>
+                    <button class="btn-warning" onclick="setBet(100)">100</button>
+                </div>
+
+                <div class="buttons" id="action-buttons" style="display: none;">
+                    <button class="btn-primary" onclick="hit()">Tirer (Hit)</button>
+                    <button class="btn-secondary" onclick="stand()">Rester (Stand)</button>
+                    <button class="btn-warning" id="double-btn" onclick="doubleDown()">Doubler</button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" placeholder="Message..." maxlength="100" onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button class="btn-primary" onclick="sendMessage()">📤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        let db;
+        let currentPlayer = null;
+        let currentRoom = null;
+        let currentRoomRef = null;
+        let playersRef = null;
+
+        // Initialisation Firebase au chargement
+        window.onload = function() {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDAOT_p9LaqN4YBgbyHC9XoK0X37b4rvEU",
+                authDomain: "blackjack-17dc0.firebaseapp.com",
+                databaseURL: "https://blackjack-17dc0-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "blackjack-17dc0",
+                storageBucket: "blackjack-17dc0.firebasestorage.app",
+                messagingSenderId: "577989732495",
+                appId: "1:577989732495:web:7a0f5a713909c1ea4ca8fa"
+            };
+            
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log('✅ Firebase initialisé avec succès');
+        };
+
+        function setPlayerName() {
+            const name = document.getElementById('player-name-input').value.trim();
+            if (!name) {
+                alert('Veuillez entrer un pseudo');
+                return;
+            }
+
+            currentPlayer = {
+                id: 'player_' + Date.now(),
+                name: name,
+                chips: 1000
+            };
+
+            localStorage.setItem('currentPlayer', JSON.stringify(currentPlayer));
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('lobby').style.display = 'block';
+            document.getElementById('lobby-chips').textContent = currentPlayer.chips;
+            
+            refreshRooms();
+        }
+
+        function createRoom() {
+            const roomCode = generateRoomCode();
+            const roomRef = db.ref('rooms/' + roomCode);
+            
+            roomRef.set({
+                code: roomCode,
+                host: currentPlayer.id,
+                status: 'waiting',
+                createdAt: Date.now(),
+                players: {
+                    [currentPlayer.id]: {
+                        ...currentPlayer,
+                        status: 'waiting',
+                        bet: 0,
+                        hand: [],
+                        score: 0
+                    }
+                },
+                dealer: { hand: [], score: 0 },
+                deck: [],
+                currentTurn: null,
+                messages: []
+            }).then(() => {
+                joinRoom(roomCode);
+            });
+        }
+
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function joinRoom(roomCode) {
+            currentRoom = roomCode;
+            currentRoomRef = db.ref('rooms/' + roomCode);
+            playersRef = db.ref('rooms/' + roomCode + '/players');
+            
+            const playerRef = playersRef.child(currentPlayer.id);
+            playerRef.set({
+                ...currentPlayer,
+                status: 'waiting',
+                bet: 0,
+                hand: [],
+                score: 0,
+                joinedAt: Date.now()
+            });
+
+            currentRoomRef.on('value', updateGameRoom);
+            playerRef.onDisconnect().remove();
+            
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('game-room').style.display = 'block';
+            document.getElementById('current-room-code').textContent = roomCode;
+            
+            sendSystemMessage(`${currentPlayer.name} a rejoint la partie`);
+        }
+
+        function refreshRooms() {
+            db.ref('rooms').once('value', (snapshot) => {
+                const rooms = snapshot.val() || {};
+                const container = document.getElementById('rooms-container');
+                container.innerHTML = '';
+                
+                Object.values(rooms).forEach(room => {
+                    const playerCount = room.players ? Object.keys(room.players).length : 0;
+                    
+                    if (playerCount < 5 && room.status !== 'finished') {
+                        const card = document.createElement('div');
+                        card.className = 'room-card';
+                        card.onclick = () => joinRoom(room.code);
+                        
+                        const statusText = room.status === 'playing' ? '🎮 En cours' : '⏳ En attente';
+                        
+                        card.innerHTML = `
+                            <h3>🎰 Salle ${room.code}</h3>
+                            <div class="room-info"><span>Joueurs</span><span>${playerCount}/5</span></div>
+                            <div class="room-info"><span>Statut</span><span>${statusText}</span></div>
+                        `;
+                        
+                        container.appendChild(card);
+                    }
+                });
+                
+                if (container.children.length === 0) {
+                    container.innerHTML = '<div class="message info">Aucune salle disponible. Créez-en une !</div>';
+                }
+            });
+        }
+
+        function leaveRoom() {
+            if (currentRoomRef) {
+                playersRef.child(currentPlayer.id).remove();
+                currentRoomRef.off();
+                currentRoom = null;
+                currentRoomRef = null;
+                playersRef = null;
+            }
+            
+            document.getElementById('game-room').style.display = 'none';
+            document.getElementById('lobby').style.display = 'block';
+            refreshRooms();
+        }
+
+        function updateGameRoom(snapshot) {
+            const room = snapshot.val();
+            if (!room) {
+                leaveRoom();
+                return;
+            }
+
+            const players = room.players || {};
+            const dealer = room.dealer || { hand: [], score: 0 };
+            
+            updateDealer(dealer, room.status);
+            updatePlayers(players, room.currentTurn);
+            
+            if (players[currentPlayer.id]) {
+                currentPlayer.chips = players[currentPlayer.id].chips;
+                document.getElementById('game-chips').textContent = currentPlayer.chips;
+            }
+            
+            updateControls(room, players[currentPlayer.id]);
+            updateChat(room.messages || []);
+        }
+
+        function updateDealer(dealer, gameStatus) {
+            const cardsDiv = document.getElementById('dealer-cards');
+            cardsDiv.innerHTML = '';
+            
+            if (dealer.hand && dealer.hand.length > 0) {
+                dealer.hand.forEach((card, index) => {
+                    if (index === 0 && gameStatus === 'playing') {
+                        displayCard({ value: '?', suit: '?' }, cardsDiv, true);
+                    } else {
+                        displayCard(card, cardsDiv);
+                    }
+                });
+                
+                if (gameStatus === 'playing') {
+                    document.getElementById('dealer-score').textContent = 'Score: ?';
+                } else {
+                    document.getElementById('dealer-score').textContent = `Score: ${dealer.score}`;
+                }
+            }
+        }
+
+        function updatePlayers(players, currentTurn) {
+            const container = document.getElementById('players-container');
+            container.innerHTML = '';
+            
+            Object.entries(players).forEach(([id, player]) => {
+                const handDiv = document.createElement('div');
+                handDiv.className = 'player-hand';
+                
+                if (id === currentPlayer.id) handDiv.classList.add('current-player');
+                if (id === currentTurn) handDiv.classList.add('active');
+                
+                const nameClass = id === currentPlayer.id ? 'player-name you' : 'player-name';
+                const nameDisplay = id === currentPlayer.id ? `${player.name} (Vous)` : player.name;
+                
+                handDiv.innerHTML = `
+                    <div class="hand-title">
+                        <span class="${nameClass}">${nameDisplay}</span>
+                        <span class="hand-score">Score: ${player.score || 0}</span>
+                    </div>
+                    <div class="cards" id="cards-${id}"></div>
+                    <div class="player-status">
+                        <span>Mise: ${player.bet || 0} 💰</span>
+                        <span class="status-badge status-${player.status || 'waiting'}">${getStatusText(player.status)}</span>
+                    </div>
+                `;
+                
+                container.appendChild(handDiv);
+                
+                const cardsDiv = document.getElementById(`cards-${id}`);
+                if (player.hand && player.hand.length > 0) {
+                    player.hand.forEach(card => displayCard(card, cardsDiv));
+                }
+            });
+        }
+
+        function displayCard(card, container, hidden = false) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            
+            if (hidden) {
+                cardDiv.className += ' card-back';
+                cardDiv.innerHTML = '🂠';
+            } else {
+                const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+                cardDiv.className += ` ${color}`;
+                cardDiv.innerHTML = `<div>${card.value}</div><div>${card.suit}</div>`;
+            }
+            
+            container.appendChild(cardDiv);
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'waiting': '⏳ En attente',
+                'ready': '✅ Prêt',
+                'playing': '🎮 En jeu',
+                'stand': '✋ Reste',
+                'bust': '💥 Bust',
+                'win': '🏆 Gagné',
+                'lose': '❌ Perdu',
+                'push': '🤝 Égalité'
+            };
+            return statusMap[status] || status;
+        }
+
+        function updateControls(room, player) {
+            const betSection = document.getElementById('bet-section');
+            const quickBet = document.getElementById('quick-bet');
+            const actionButtons = document.getElementById('action-buttons');
+            const gameMessage = document.getElementById('game-message');
+            
+            betSection.style.display = 'none';
+            quickBet.style.display = 'none';
+            actionButtons.style.display = 'none';
+            
+            if (!player) return;
+            
+            if (room.status === 'waiting' || room.status === 'betting') {
+                if (player.status === 'waiting') {
+                    betSection.style.display = 'flex';
+                    quickBet.style.display = 'flex';
+                    document.getElementById('bet-input').max = player.chips;
+                    gameMessage.textContent = '💰 Placez votre mise pour commencer';
+                    gameMessage.className = 'message info';
+                }
+            }
+            
+            if (room.status === 'playing' && room.currentTurn === currentPlayer.id) {
+                actionButtons.style.display = 'flex';
+                gameMessage.textContent = '🎮 À votre tour !';
+                gameMessage.className = 'message success';
+                
+                const doubleBtn = document.getElementById('double-btn');
+                doubleBtn.disabled = player.hand.length > 2 || player.chips < player.bet;
+            }
+            
+            if (room.status === 'finished') {
+                if (player.status === 'win') {
+                    gameMessage.textContent = `🏆 Vous avez gagné ${player.bet * 2} jetons !`;
+                    gameMessage.className = 'message success';
+                } else if (player.status === 'lose') {
+                    gameMessage.textContent = '❌ Vous avez perdu cette manche';
+                    gameMessage.className = 'message error';
+                } else if (player.status === 'push') {
+                    gameMessage.textContent = '🤝 Égalité ! Mise remboursée';
+                    gameMessage.className = 'message warning';
+                }
+            }
+        }
+
+        function setBet(amount) {
+            if (amount <= currentPlayer.chips) {
+                document.getElementById('bet-input').value = amount;
+            }
+        }
+
+        function placeBet() {
+            const betInput = document.getElementById('bet-input');
+            const bet = parseInt(betInput.value);
+            
+            if (isNaN(bet) || bet < 10) {
+                alert('Mise minimum: 10 jetons');
+                return;
+            }
+            
+            if (bet > currentPlayer.chips) {
+                alert('Jetons insuffisants!');
+                return;
+            }
+            
+            playersRef.child(currentPlayer.id).update({
+                bet: bet,
+                chips: currentPlayer.chips - bet,
+                status: 'ready'
+            });
+            
+            sendSystemMessage(`${currentPlayer.name} a misé ${bet} jetons`);
+            checkAllPlayersReady();
+        }
+
+        function checkAllPlayersReady() {
+            currentRoomRef.once('value', (snapshot) => {
+                const room = snapshot.val();
+                const players = room.players || {};
+                
+                const allReady = Object.values(players).every(p => p.status === 'ready');
+                
+                if (allReady && Object.keys(players).length > 0) {
+                    startGameRound();
+                }
+            });
+        }
+
+        function startGameRound() {
+            currentRoomRef.once('value', (snapshot) => {
+                const room = snapshot.val();
+                const players = room.players || {};
+                
+                const deck = createDeck();
+                const dealerHand = [deck.pop(), deck.pop()];
+                
+                Object.keys(players).forEach(playerId => {
+                    players[playerId].hand = [deck.pop(), deck.pop()];
+                    players[playerId].score = calculateScore(players[playerId].hand);
+                    players[playerId].status = 'playing';
+                });
+                
+                const firstPlayer = Object.keys(players)[0];
+                
+                currentRoomRef.update({
+                    status: 'playing',
+                    deck: deck,
+                    dealer: {
+                        hand: dealerHand,
+                        score: calculateScore([dealerHand[1]])
+                    },
+                    players: players,
+                    currentTurn: firstPlayer
+                });
+                
+                sendSystemMessage('🎴 Les cartes sont distribuées !');
+            });
+        }
+
+        function createDeck() {
+            const suits = ['♥', '♦', '♣', '♠'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const deck = [];
+            
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value });
+                }
+            }
+            
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            
+            return deck;
+        }
+
+        function calculateScore(hand) {
+            let score = 0;
+            let aces = 0;
+            
+            for (let card of hand) {
+                if (card.value === 'A') {
+                    score += 11;
+                    aces++;
+                } else if (['J', 'Q', 'K'].includes(card.value)) {
+                    score += 10;
+                } else {
+                    score += parseInt(card.value);
+                }
+            }
+            
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            
+            return score;
+        }
+
+        function hit() {
+            currentRoomRef.once('value', (snapshot) => {
+                const room = snapshot.val();
+                const deck = room.deck;
+                const player = room.players[currentPlayer.id];
+                
+                const card = deck.pop();
+                player.hand.push(card);
+                player.score = calculateScore(player.hand);
+                
+                if (player.score > 21) {
+                    player.status = 'bust';
+                    sendSystemMessage(`${currentPlayer.name} a dépassé 21 !`);
+                    nextTurn(room);
+                } else {
+                    currentRoomRef.update({
+                        deck: deck,
+                        [`players/${currentPlayer.id}`]: player
+                    });
+                }
+            });
+        }
+
+        function stand() {
+            currentRoomRef.once('value', (snapshot) => {
+                const room = snapshot.val();
+                const player = room.players[currentPlayer.id];
+                
+                player.status = 'stand';
+                room.players[currentPlayer.id] = player;
+                
+                sendSystemMessage(`${currentPlayer.name} reste sur ${player.score}`);
+                nextTurn(room);
+            });
+        }
+
+        function doubleDown() {
+            currentRoomRef.once('value', (snapshot) => {
+                const room = snapshot.val();
+                const player = room.players[currentPlayer.id];
+                const deck = room.deck;
+                
+                player.chips -= player.bet;
+                player.bet *= 2;
+                
+                const card = deck.pop();
+                player.hand.push(card);
+                player.score = calculateScore(player.hand);
+                
+                if (player.score > 21) {
+                    player.status = 'bust';
+                    sendSystemMessage(`${currentPlayer.name} a doublé et dépassé 21 !`);
+                } else {
+                    player.status = 'stand';
+                    sendSystemMessage(`${currentPlayer.name} a doublé sur ${player.score}`);
+                }
+                
+                room.players[currentPlayer.id] = player;
+                room.deck = deck;
+                
+                nextTurn(room);
+            });
+        }
+
+        function nextTurn(room) {
+            const playerIds = Object.keys(room.players);
+            const currentIndex = playerIds.indexOf(room.currentTurn);
+            
+            let nextIndex = (currentIndex + 1) % playerIds.length;
+            let attempts = 0;
+            
+            while (attempts < playerIds.length) {
+                const nextPlayerId = playerIds[nextIndex];
+                const nextPlayer = room.players[nextPlayerId];
+                
+                if (nextPlayer.status === 'playing') {
+                    room.currentTurn = nextPlayerId;
+                    currentRoomRef.update(room);
+                    return;
+                }
+                
+                nextIndex = (nextIndex + 1) % playerIds.length;
+                attempts++;
+            }
+            
+            dealerTurn(room);
+        }
+
+        function dealerTurn(room) {
+            const dealer = room.dealer;
+            const deck = room.deck;
+            
+            sendSystemMessage('🎩 Le croupier révèle ses cartes...');
+            
+            dealer.score = calculateScore(dealer.hand);
+            
+            setTimeout(() => {
+                function dealerDraws() {
+                    if (dealer.score < 17) {
+                        const card = deck.pop();
+                        dealer.hand.push(card);
+                        dealer.score = calculateScore(dealer.hand);
+                        
+                        currentRoomRef.update({
+                            dealer: dealer,
+                            deck: deck
+                        });
+                        
+                        setTimeout(dealerDraws, 1000);
+                    } else {
+                        finishRound(room);
+                    }
+                }
+                
+                dealerDraws();
+            }, 1000);
+        }
+
+        function finishRound(room) {
+            const dealer = room.dealer;
+            const players = room.players;
+            
+            Object.keys(players).forEach(playerId => {
+                const player = players[playerId];
+                
+                if (player.status === 'bust') {
+                    player.status = 'lose';
+                } else if (dealer.score > 21) {
+                    player.status = 'win';
+                    player.chips += player.bet * 2;
+                } else if (player.score > dealer.score) {
+                    player.status = 'win';
+                    player.chips += player.bet * 2;
+                } else if (player.score < dealer.score) {
+                    player.status = 'lose';
+                } else {
+                    player.status = 'push';
+                    player.chips += player.bet;
+                }
+            });
+            
+            currentRoomRef.update({
+                status: 'finished',
+                players: players,
+                currentTurn: null
+            });
+            
+            sendSystemMessage('🏁 Manche terminée !');
+            
+            setTimeout(() => resetRound(room), 5000);
+        }
+
+        function resetRound(room) {
+            const players = room.players;
+            
+            Object.keys(players).forEach(playerId => {
+                players[playerId].hand = [];
+                players[playerId].score = 0;
+                players[playerId].bet = 0;
+                players[playerId].status = 'waiting';
+                
+                if (players[playerId].chips < 10) {
+                    sendSystemMessage(`${players[playerId].name} n'a plus de jetons et quitte la partie`);
+                    delete players[playerId];
+                }
+            });
+            
+            currentRoomRef.update({
+                status: 'waiting',
+                players: players,
+                dealer: { hand: [], score: 0 },
+                deck: [],
+                currentTurn: null
+            });
+            
+            sendSystemMessage('💰 Nouvelle manche ! Placez vos mises');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const messagesRef = db.ref(`rooms/${currentRoom}/messages`);
+            messagesRef.push({
+                sender: currentPlayer.name,
+                text: message,
+                timestamp: Date.now(),
+                type: 'user'
+            });
+            
+            input.value = '';
+        }
+
+        function sendSystemMessage(text) {
+            if (!currentRoom) return;
+            
+            const messagesRef = db.ref(`rooms/${currentRoom}/messages`);
+            messagesRef.push({
+                sender: 'Système',
+                text: text,
+                timestamp: Date.now(),
+                type: 'system'
+            });
+        }
+
+        function updateChat(messages) {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            
+            const recentMessages = messages.slice(-20);
+            
+            recentMessages.forEach(msg => {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-message';
+                
+                if (msg.type === 'system') {
+                    msgDiv.innerHTML = `<span style="color: #3498db;">ℹ️ ${msg.text}</span>`;
+                } else {
+                    msgDiv.innerHTML = `<span class="sender">${msg.sender}:</span> ${msg.text}`;
+                }
+                
+                container.appendChild(msgDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html
